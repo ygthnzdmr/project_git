@@ -4,94 +4,50 @@
     <meta charset="UTF-8">
     <title>Satranç Taşı Tanıma</title>
     <link rel="icon" type="image/png" href="/static/icon.png">
-    <style>
-        .page {
-            width: 100%;
-            max-width: 1100px;
-            margin: 40px auto;
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-            align-items: center;
-        }
 
+    <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background-image: url("/static/bg.png");
-            background-repeat: repeat;
-            background-size: 612px 408px; 
-            min-height: 100vh;
+            background: #f3f3f3;
             margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(4px);
-            color: #333;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            text-align: center;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
 
-
-        h1 {
+        h1, h2 {
             margin-top: 0;
-            font-size: 24px;
-        }
-
-        .subtitle {
-            color: #777;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        input[type="file"] {
-            margin-bottom: 15px;
         }
 
         button {
             padding: 10px 16px;
-            border-radius: 10px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             font-size: 14px;
-            margin: 5px;
-            transition: 0.2s;
+            margin: 5px 0;
         }
 
-        .btn-upload {
-            background: #4CAF50;
-            color: white;
-        }
-
-        .btn-upload:hover {
-            background: #43a047;
-        }
-
-        .btn-random {
-            background: #3f51b5;
-            color: white;
-        }
-
-        .btn-random:hover {
-            background: #3949ab;
-        }
-
-        .preview {
-            margin-top: 20px;
-        }
+        .btn-train { background: #ff9800; color: white; }
+        .btn-upload { background: #4CAF50; color: white; }
+        .btn-random { background: #3f51b5; color: white; }
 
         .preview img {
             width: 220px;
-            border-radius: 12px;
-            border: 3px solid #eee;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #ddd;
         }
 
         .result {
@@ -101,231 +57,59 @@
         }
 
         .confidence {
+            font-size: 14px;
             margin-top: 5px;
-            font-size: 14px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        .badge-ok {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .badge-warn {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #aaa;
-        }
-        .file-label {
-            display: inline-block;
-            padding: 10px 18px;
-            background: linear-gradient(135deg, #ff9800, #f57c00);
-            color: white;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 8px;
-            transition: 0.2s;
-        }
-
-        .file-label:hover {
-            background: linear-gradient(135deg, #ffa726, #fb8c00);
-        }
-
-        .file-name {
-            font-size: 12px;
-            color: #555;
-            margin-bottom: 12px;
-        }
-
-        .btn-clear {
-            background: #e53935;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-
-        .btn-clear:hover {
-            background: #c62828;
-        }
-        .graph-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(4px);
-            width: 100%;
-            max-width: 800px;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        .graph-card img {
+        .graphs img {
             width: 100%;
             max-width: 700px;
             margin: 20px auto;
             display: block;
-            border-radius: 12px;
         }
 
-        .graph-card h3 {
-            margin-top: 35px;
-            color: #333;
-        }
-
-        .graph-card h1 {
-            margin-top: 35px;
-            color: #333;
-        }
-
-        .accuracy-box {
-            font-size: 22px;
-            padding: 15px;
-            background: #e8f5e9;
-            border-radius: 12px;
-            color: #2e7d32;
-            margin-bottom: 20px;
+        .warn {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 8px;
+            color: #ef6c00;
+            font-weight: bold;
         }
     </style>
-    <script>
-        let lastRunning = null;          // önceki running durumu
-        let reloadedForRun = null;       // hangi run için reload attık
-        const KEY = "reloaded_run_id";   // sessionStorage key
-
-        function updateProgress(){
-        fetch("/progress")
-            .then(r => r.json())
-            .then(data => {
-            // progress bar
-            if (data.total > 0) {
-                const percent = Math.min(100, (data.current / data.total) * 100);
-                document.getElementById("progress-bar").style.width = percent + "%";
-                document.getElementById("progress-text").innerText =
-                `Eğitim: ${data.current} / ${data.total} epoch`;
-            } else {
-                document.getElementById("progress-text").innerText = "";
-            }
-
-            // status text
-            if (data.running) {
-                document.getElementById("status-text").innerText = "⏳ Eğitim devam ediyor...";
-            } else if (data.trained) {
-                document.getElementById("status-text").innerText = "✅ Eğitim tamamlandı!";
-            } else {
-                document.getElementById("status-text").innerText = "";
-            }
-
-            // 🔒 reload kilidi (aynı run_id için 1 kez)
-            const already = sessionStorage.getItem(KEY);
-
-            // running true -> false geçişini yakala
-            if (lastRunning === true && data.running === false && data.trained) {
-                if (already !== String(data.run_id)) {
-                sessionStorage.setItem(KEY, String(data.run_id));
-                setTimeout(() => window.location.href = "/", 800);
-                return;
-                }
-            }
-
-            lastRunning = data.running;
-
-            // polling: eğitim varsa daha sık, yoksa daha seyrek
-            setTimeout(updateProgress, data.running ? 800 : 2000);
-            })
-            .catch(() => setTimeout(updateProgress, 2000));
-        }
-
-        function startTraining(){
-        const epochs = document.getElementById("epoch-input").value;
-
-        document.getElementById("status-text").innerText = "⏳ Eğitim başladı...";
-        document.getElementById("progress-bar").style.width = "0%";
-        document.getElementById("progress-text").innerText = `Eğitim: 0 / ${epochs} epoch`;
-
-        // aynı run için reload kilidini sıfırla (yeni eğitim başlıyor)
-        sessionStorage.removeItem(KEY);
-
-        fetch("/train", {
-            method: "POST",
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: `epochs=${encodeURIComponent(epochs)}`
-        });
-
-        lastRunning = true;
-        updateProgress();
-        }
-
-        window.addEventListener("load", updateProgress);
-    </script>
-
 </head>
+
 <body>
-<div class="page">
+<div class="container">
+
+    <!-- ================= TRAIN ================= -->
     <div class="card">
-        <h1>Eğitim Süreci</h1>
-        <div>
-            <label>Epoch Sayısı:</label>
-            <input type="number" id="epoch-input" value="10" min="1" max="50">
+        <h1>Model Eğitimi</h1>
 
-            <button id="train-btn" type="button" onclick="startTraining()">
-                🚀 Eğitimi Başlat
-            </button>
-
-
-
-        </div>
-    <div style="width:100%; background:#e0e0e0; border-radius:12px; margin-top:15px; overflow:hidden;">
-        <div id="progress-bar"
-        style="width:0%; height:18px; background:linear-gradient(90deg,#4caf50,#66bb6a);
-                border-radius:12px; transition:width 0.4s;">
-        </div>
+        <form action="/train" method="POST">
+            <label>Epoch:</label>
+            <input type="number" name="epochs" value="5" min="1" max="50">
+            <br><br>
+            <button class="btn-train" type="submit">🚀 Eğitimi Başlat</button>
+        </form>
     </div>
 
-    <p id="progress-text" style="margin-top:10px; font-weight:bold;"></p>
-    <p id="status-text" style="margin-top:6px; font-weight:bold;"></p>
-
-    </div>
-
+    <!-- ================= TEST ================= -->
     <div class="card">
-        <h1>♟ Satranç Taşı Tanıma</h1>
-        <form method="POST" enctype="multipart/form-data">
-        {% if trained %}
-            <input type="file" id="file-upload" name="image" hidden>
-            <label for="file-upload" class="file-label">
-                📁 Görsel Seç
-            </label>
-            <br>
-            <button class="btn-upload" type="submit">
-                📸 Foto Yükle
-            </button>
-            <button class="btn-random" type="submit" name="random_test">
-                🎲 Rastgele Test
-            </button>
-            <button class="btn-clear" type="submit" formaction="/clear" formmethod="POST">
-                    🗑 Temizle
-            </button>
+        <h1>♟ Satranç Taşı Test</h1>
+
+        {% if model_ready %}
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="image">
+                <br><br>
+                <button class="btn-upload" type="submit">📸 Foto Yükle</button>
+                <br><br>
+                <button class="btn-random" type="submit" name="random_test">🎲 Rastgele Test</button>
+            </form>
         {% else %}
-            <div class="badge badge-warn" style="margin-top:15px;">
-                ⚠️ Model henüz eğitilmedi.<br>
-                Test yapmak için önce eğitimi başlatın.
+            <div class="warn">
+                ⚠️ Model henüz eğitilmedi. Test için önce eğitimi başlatın.
             </div>
         {% endif %}
-        </form>
 
         {% if img_path %}
             <div class="preview">
@@ -340,47 +124,33 @@
                 <div class="confidence">
                     Güven: %{{ "%.2f"|format(confidence*100) }}
                 </div>
-
-                {% if confidence >= 0.7 %}
-                    <div class="badge badge-ok">✔ Model emin</div>
-                {% else %}
-                    <div class="badge badge-warn">⚠ Model emin değil</div>
-                {% endif %}
             {% endif %}
         {% endif %}
-
-        <footer>
-            Görü ve Görüntü Tanıma Projesi
-        </footer>
-        <footer>
-            Yiğithan Özdemir
-        </footer>
     </div>
-    
-    {% if trained %}
-    <div class="graph-card">
-        <h1>📊 Eğitim Grafikleri</h1>
 
-        {% if accuracy %}
-            <div class="accuracy-box">
-                🎯 Eğitim Doğruluğu: %{{ "%.2f"|format(accuracy*100) }}
-            </div>
+    <!-- ================= GRAPHS ================= -->
+    {% if graphs is defined and (graphs.learning or graphs.confusion or graphs.roc) %}
+
+    <div class="card graphs">
+        <h2>📊 Eğitim Grafikleri</h2>
+
+        {% if graphs.learning %}
+            <h3>📈 Learning Curve</h3>
+            <img src="/static/learning_curve.png">
         {% endif %}
 
-        <h3>📈 Learning Curve</h3>
-        <img src="/static/learning_curve.png?v={{ run_id }}">
+        {% if graphs.confusion %}
+            <h3>🧩 Confusion Matrix</h3>
+            <img src="/static/confusion_matrix.png">
+        {% endif %}
 
-        <h3>🧩 Confusion Matrix</h3>
-        <img src="/static/confusion_matrix.png?v={{ run_id }}">
-
-        <h3>📉 ROC Curve</h3>
-        <img src="/static/roc_curve.png?v={{ run_id }}">
+        {% if graphs.roc %}
+            <h3>📉 ROC Curve</h3>
+            <img src="/static/roc_curve.png">
+        {% endif %}
     </div>
     {% endif %}
 
-
 </div>
-
-
 </body>
 </html>
