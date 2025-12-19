@@ -93,7 +93,7 @@ def train():
         print(f"✅ Eğitim bitti & model kaydedildi → {MODEL_PATH}")
 
     threading.Thread(target=bg_train, daemon=True).start()
-    return redirect(url_for("index"))
+    return "", 204
 
 # -------------------------
 # TEST IMAGE SERVE
