@@ -12,4 +12,4 @@ seaborn==0.13.2
 
 torch==2.9.1+cpu
 torchvision==0.21.0+cpu
-torchaudio==2.5.1+cpu
+torchaudio==2.9.1+cpu
