@@ -103,32 +103,30 @@ def train():
 
 @app.route("/predict", methods=["POST"])
 def predict_api():
-    # Model eğitilmediyse net hata
-    if not training_state["trained"]:
-        return jsonify({"error": "Model henüz eğitilmedi"}), 400
+    # model hazır değilse
+    if not model_ready:
+        return jsonify({"error": "Model henüz hazır değil"}), 400
 
     file = request.files.get("image")
     if not file or not file.filename:
         return jsonify({"error": "image field boş"}), 400
 
-    # Unique isim (aynı isim çakışmasın)
     ext = Path(file.filename).suffix or ".jpg"
     fname = f"{uuid.uuid4().hex}{ext}"
     save_path = UPLOAD_DIR / fname
     file.save(save_path)
 
-    # Tahmin
     img = PILImage.create(save_path)
     pred, idx, probs = learn.predict(img)
-    conf = float(probs[idx].item())          # 0..1
 
+    conf = float(probs[idx].item())   # 0..1
     label = str(pred) if conf >= CONF_THRESHOLD else "Emin değilim"
+
     img_url = url_for("static", filename=f"uploads/{fname}", _external=True)
 
-    # iOS yüzde basıyor diye yüzde gönderiyorum
     return jsonify({
         "label": label,
-        "confidence": conf * 100.0,          # 0..100
+        "confidence": conf * 100.0,    # iOS yüzde basıyor diye
         "additionalInfo": img_url
     })
 
