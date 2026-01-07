@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 from pathlib import Path
 import torch, threading, random, time, os
 from fastai.vision.all import *
